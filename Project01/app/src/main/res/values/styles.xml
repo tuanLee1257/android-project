@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="PhotoText" parent="Widget.AppCompat.TextView">
+        <item name="android:textSize">18dp</item>
+        <item name="fontWeight">500</item>
+    </style>
+
+    <style name="Title" parent="Widget.MaterialComponents.TextView">
+        <item name="android:textFontWeight">500</item>
+        <item name="android:textColor">@color/black</item>
+        <item name="android:textSize">16sp</item>
+<!--        <item name="android:letterSpacing"</item>-->
+    </style>
+    <style name="circleImageView" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item>
+    </style>
+    <style name="Subhead" parent="Widget.MaterialComponents.TextView">
+        <item name="fontWeight">500</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:letterSpacing">0.25</item>
+    </style>
+
+    <style name="RoundedTextField" parent="Widget.MaterialComponents.TextView">
+        <item name="android:paddingVertical">10dp</item>
+        <item name="android:paddingHorizontal">24dp</item>
+        <item name="android:background">@drawable/border_text_view</item>
+    </style>
+
+</resources>
