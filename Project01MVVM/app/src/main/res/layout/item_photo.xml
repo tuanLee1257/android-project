@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+
+        <variable
+            name="photo"
+            type="com.example.project01mvvm.models.Photo" />
+
+        <variable
+            name="HomeViewModel"
+            type="com.example.project01mvvm.mvvm.homeScreen.HomeScreenViewModel" />
+    </data>
+
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/photoCard"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:checkable="true"
+            android:clickable="true"
+            android:focusable="true"
+            android:onClick="@{()->HomeViewModel.onClick()}">
+
+            <ImageView
+                android:id="@+id/photo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:adjustViewBounds="true"
+                android:scaleType="centerCrop"
+                app:imageUrl="@{photo.urls.thumb}" />
+        </com.google.android.material.card.MaterialCardView>
+
+    </RelativeLayout>
+</layout>
