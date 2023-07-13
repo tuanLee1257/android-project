@@ -8,7 +8,11 @@
         android:id="@+id/search"
         android:icon="@drawable/search_fill0_wght500_grad0_opsz48"
         android:title="Search"></item>
-    <item ></item>
+    <item
+        android:id="@+id/add"
+        android:icon="@drawable/add_fill0_wght500_grad0_opsz48"
+        android:title="Add">
+    </item>
     <item
         android:id="@+id/bookmark"
         android:icon="@drawable/bookmark_fill0_wght500_grad0_opsz48"

@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
+import android.graphics.Canvas;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -13,11 +14,14 @@ import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.os.Environment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,6 +29,7 @@ import android.webkit.URLUtil;
 import android.widget.Button;
 import android.widget.EditText;
 
+import com.example.project01.R;
 import com.example.project01.adaper.DownloadListAdapter;
 import com.example.project01.databinding.FragmentUserBinding;
 import com.example.project01.interfaces.OnItemClickListener;
@@ -32,27 +37,35 @@ import com.example.project01.mvp.model.DownloadModel;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
 import io.realm.RealmResults;
+import it.xabaras.android.recyclerview.swipedecorator.RecyclerViewSwipeDecorator;
 
 
-public class UserFragment extends Fragment implements OnItemClickListener {
+public class UserFragment extends Fragment {
     FragmentUserBinding binding;
+
     EditText input_url;
     Button download_btn;
+
     RecyclerView downloadListView;
     DownloadListAdapter downloadListAdapter;
+
     List<DownloadModel> downloadModelList = new ArrayList<>();
-    List<DownloadStatusTask> taskList = new ArrayList<>();
+    HashMap<Long, DownloadStatusTask> taskList = new HashMap<>();
+
     Realm realm;
+    String TAG = "TAG";
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         IntentFilter filter = new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE);
+        getActivity().registerReceiver(onComplete, filter);
         getActivity().registerReceiver(onComplete, filter);
 
         RealmConfiguration realmConfig = new RealmConfiguration.Builder()
@@ -64,10 +77,23 @@ public class UserFragment extends Fragment implements OnItemClickListener {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         binding = FragmentUserBinding.inflate(getLayoutInflater());
-        input_url = binding.inputUrl;
-        download_btn = binding.downloadUrlFile;
         downloadListView = binding.downloadListView;
 
+
+
+        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(callback);
+        itemTouchHelper.attachToRecyclerView(downloadListView);
+
+        downloadListAdapter = new DownloadListAdapter(this.getContext(), downloadModelList);
+        downloadListView.setLayoutManager(new LinearLayoutManager(this.getContext()));
+        downloadListView.setAdapter(downloadListAdapter);
+
+        return binding.getRoot();
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
         List<DownloadModel> downloadModelListLocal = getAllDownloadFiles();
         if (downloadModelListLocal != null) {
             if (downloadModelListLocal.size() > 0) {
@@ -80,95 +106,61 @@ public class UserFragment extends Fragment implements OnItemClickListener {
                 }
             }
         }
-        downloadListAdapter = new DownloadListAdapter(this.getContext(), downloadModelList,this);
-        downloadListView.setLayoutManager(new LinearLayoutManager(this.getContext()));
-        downloadListView.setAdapter(downloadListAdapter);
-        return binding.getRoot();
-    }
-
-    @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-
-        binding.downloadUrlFile.setOnClickListener(view1 -> {
-            startDownloadFIle(String.valueOf(binding.inputUrl.getText()));
-        });
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
         getActivity().unregisterReceiver(onComplete);
+        realm.close();
+    }
+
+    ItemTouchHelper.Callback callback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
+        @Override
+        public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
+            return false;
+        }
+
+        @Override
+        public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
+            int position = viewHolder.getAdapterPosition();
+            removeDownloadItem(position);
+            Log.e(TAG, "onSwiped: " + position);
+        }
+
+        @Override
+        public void onChildDraw(@NonNull Canvas c, @NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, float dX, float dY, int actionState, boolean isCurrentlyActive) {
+            new RecyclerViewSwipeDecorator.Builder(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
+                    .addSwipeLeftActionIcon(R.drawable.download_fill0_wght500_grad200_opsz48)
+                    .addSwipeLeftBackgroundColor(R.color.md_theme_light_error)
+                    .create()
+                    .decorate();
+            super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
+        }
+    };
+
+    private void removeDownloadItem(int position) {
+        // remove from adapter
+        DownloadModel removeItem = downloadModelList.get(position);
+        downloadModelList.remove(removeItem);
+        downloadListAdapter.notifyItemRemoved(position);
+        // remove task
+        DownloadStatusTask downloadStatusTask = taskList.get(removeItem.getDownloadId());
+        if (downloadStatusTask != null) {
+            downloadStatusTask.cancel(true);
+        }
+        // remove from realm
+        realm.executeTransaction(new Realm.Transaction() {
+            @Override
+            public void execute(Realm realm) {
+                DownloadModel removeRealmItem = realm.where(DownloadModel.class).equalTo("id", removeItem.getId()).findFirst();
+                removeRealmItem.deleteFromRealm();
+            }
+        });
     }
 
     // on adapter item clicked
-    @Override
-    public void onItemClick(View view, int position) {
-        downloadModelList.remove(position);
-        downloadListAdapter.notifyItemInserted(position);
 
-        Realm realm = Realm.getDefaultInstance();
-        realm.executeTransaction(new Realm.Transaction() {
-            @Override
-            public void execute(Realm realm) {
-                DownloadModel result = realm.where(DownloadModel.class).equalTo("id",downloadModelList.get(position).getId()).findFirst();
-                result.deleteFromRealm();
-            }
-        });
-        taskList.
-    }
-
-    private void startDownloadFIle(String url) {
-        String urlFile = url;
-//        String urlFile = photo.getLinks().getDownload();
-        String fileName = URLUtil.guessFileName(urlFile, null, null);
-        String downloadPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath();
-        File file = new File(downloadPath, fileName);
-
-        DownloadManager.Request request = new DownloadManager.Request(Uri.parse(urlFile));
-        request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_MOBILE | DownloadManager.Request.NETWORK_WIFI);
-        request.setTitle(fileName);
-        request.setDescription("Downloading...");
-        request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE);
-        request.setDestinationUri(Uri.fromFile(file));
-        request.setRequiresCharging(false);
-        request.setAllowedOverMetered(true);
-        request.setAllowedOverRoaming(true);
-
-        DownloadManager downloadManager = (DownloadManager) getContext().getSystemService(Context.DOWNLOAD_SERVICE);
-
-        DownloadModel downloadModel = new DownloadModel();
-        long downloadId = downloadManager.enqueue(request);
-
-        Number currentNum = realm.where(DownloadModel.class).max("id");
-        int nextId;
-        if (currentNum == null) {
-            nextId = 1;
-        } else nextId = currentNum.intValue() + 1;
-
-        downloadModel.setId(nextId);
-        downloadModel.setStatus("Downloading");
-        downloadModel.setTitle(fileName);
-        downloadModel.setFile_size("0");
-        downloadModel.setProgress("0");
-        downloadModel.setIs_paused(false);
-        downloadModel.setDownloadId(downloadId);
-        downloadModel.setFile_path("");
-
-        downloadModelList.add(downloadModel);
-        downloadListAdapter.notifyItemInserted(downloadModelList.size() - 1);
-
-        realm.executeTransaction(new Realm.Transaction() {
-            @Override
-            public void execute(Realm realm) {
-                realm.copyToRealm(downloadModel);
-            }
-        });
-
-        DownloadStatusTask downloadStatusTask = new DownloadStatusTask(downloadModel);
-        taskList.add(downloadStatusTask);
-        runTask(downloadStatusTask, "" + downloadId);
-    }
 
 
     public class DownloadStatusTask extends AsyncTask<String, String, String> {
@@ -188,6 +180,7 @@ public class UserFragment extends Fragment implements OnItemClickListener {
             DownloadManager downloadManager = (DownloadManager) getContext().getSystemService(Context.DOWNLOAD_SERVICE);
             boolean downloading = true;
             while (downloading) {
+
                 DownloadManager.Query query = new DownloadManager.Query();
                 query.setFilterById(Long.parseLong(downloadId));
                 Cursor cursor = downloadManager.query(query);
@@ -205,7 +198,10 @@ public class UserFragment extends Fragment implements OnItemClickListener {
                     downloading = false;
                 }
 
-                int progress = (int) ((bytesDownloaded * 100L) / totalSize);
+                int progress = 0;
+                if (totalSize != 0) {
+                     progress = (int) ((bytesDownloaded * 100L) / totalSize);
+                }
                 String status = getStatusMessages(cursor);
                 publishProgress(new String[]{String.valueOf(progress), String.valueOf(bytesDownloaded), status});
             }
@@ -290,5 +286,4 @@ public class UserFragment extends Fragment implements OnItemClickListener {
         Realm realm = Realm.getDefaultInstance();
         return realm.where(DownloadModel.class).findAll();
     }
-
 }

@@ -86,7 +86,7 @@ public class TopicListAdapter extends RecyclerView.Adapter<TopicListAdapter.View
 
         @Override
         public void onClick(View view) {
-            onItemClickListener.onItemClick(view,getAdapterPosition());
+            onItemClickListener.onItemClick(getAdapterPosition());
         }
 
         public void setSelected(boolean isSelected, int position) {

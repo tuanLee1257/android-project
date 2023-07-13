@@ -9,12 +9,12 @@ apply plugin: "realm-android"
 
 android {
     namespace 'com.example.project01'
-    compileSdk 34
+    compileSdk 33
 
     defaultConfig {
         applicationId "com.example.project01"
         minSdk 27
-        targetSdk 34
+        targetSdk 33
         versionCode 1
         versionName "1.0"
 
@@ -22,6 +22,7 @@ android {
     }
     buildFeatures {
         viewBinding true
+        dataBinding true
     }
     buildTypes {
         release {
@@ -54,4 +55,10 @@ dependencies {
     implementation 'com.squareup.retrofit2:converter-gson:2.1.0'
     implementation 'androidx.recyclerview:recyclerview:latest'
     implementation 'com.squareup.picasso:picasso:2.8'
+    implementation 'it.xabaras.android:recyclerview-swipedecorator:1.4'
+
+    implementation 'io.reactivex.rxjava3:rxandroid:3.0.2'
+    implementation 'io.reactivex.rxjava3:rxjava:3.1.5'
+    implementation 'com.squareup.retrofit2:adapter-rxjava:2.9.0'
+
 }

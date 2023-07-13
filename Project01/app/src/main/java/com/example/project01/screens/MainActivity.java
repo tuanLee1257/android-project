@@ -49,13 +49,7 @@ public class MainActivity extends AppCompatActivity {
             Log.e(TAG, "onCreate: "+item.getItemId());
             return true;
         });
-        binding.add.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this,AddPhotoActivity.class);
-                startActivity(intent);
-            }
-        });
+
 
 
     }

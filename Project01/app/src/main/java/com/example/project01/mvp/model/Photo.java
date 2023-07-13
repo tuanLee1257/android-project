@@ -67,6 +67,16 @@ public class Photo implements Serializable {
     @Expose
     private User user;
 
+    private boolean isChecked = false;
+
+    public boolean isChecked() {
+        return isChecked;
+    }
+
+    public void setChecked(boolean checked) {
+        isChecked = checked;
+    }
+
     public String getId() {
         return id;
     }
