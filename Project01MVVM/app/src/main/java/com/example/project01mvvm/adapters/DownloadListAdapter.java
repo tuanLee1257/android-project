@@ -46,27 +46,23 @@ public class DownloadListAdapter extends RecyclerView.Adapter<DownloadListAdapte
     }
 
 
-
     @Override
     public int getItemCount() {
         return downloadModels.size();
     }
 
 
-    public class ViewHolder extends RecyclerView.ViewHolder   {
+    public class ViewHolder extends RecyclerView.ViewHolder {
         TextView name;
         TextView status;
         TextView file_size;
-        Button remove_btn;
         LinearProgressIndicator progressIndicator;
-
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             name = itemView.findViewById(R.id.fileName);
             status = itemView.findViewById(R.id.status);
             file_size = itemView.findViewById(R.id.file_size);
-            remove_btn = itemView.findViewById(R.id.remove_btn);
             progressIndicator = itemView.findViewById(R.id.progressIndicator);
         }
 
@@ -127,7 +123,4 @@ public class DownloadListAdapter extends RecyclerView.Adapter<DownloadListAdapte
         }
     }
 
-    public void deleteDownload(DownloadModel downloadModel) {
-
-    }
 }

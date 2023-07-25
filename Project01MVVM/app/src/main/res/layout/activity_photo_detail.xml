@@ -25,13 +25,13 @@
                 android:orientation="vertical">
 
                 <!-- Media -->
-                <ImageView
+                <com.google.android.material.imageview.ShapeableImageView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:adjustViewBounds="true"
-                    android:maxHeight="600dp"
+                    android:maxHeight="400dp"
                     android:scaleType="centerCrop"
-                    app:imageUrl="@{PhotoDetailViewModel.photo.urls.thumb}" />
+                    app:shapeableImageUrl="@{PhotoDetailViewModel.photo.urls.regular}" />
 
                 <LinearLayout
                     android:layout_width="match_parent"

@@ -15,8 +15,7 @@
         android:layout_height="match_parent"
         android:background="@color/md_theme_light_background"
         android:orientation="vertical"
-        tools:context=".mvvm.homeScreen.MainActivity">
-
+        tools:context=".mvvm.homeScreen.HomeFragment">
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/topicListView"
@@ -46,7 +45,9 @@
             android:layout_alignParentBottom="true"
             android:layout_marginRight="16dp"
             android:layout_marginBottom="36dp"
+            android:onClick="@{()->HomeViewModel.startDownload()}"
             android:text="Download"
-            android:visibility="invisible" />
+            android:visibility="invisible"
+            app:is_photo_selected="@{HomeViewModel.selectedPhoto}" />
     </RelativeLayout>
 </layout>

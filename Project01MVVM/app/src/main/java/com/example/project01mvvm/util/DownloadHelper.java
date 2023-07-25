@@ -11,9 +11,18 @@ import com.example.project01mvvm.models.DownloadModel;
 import java.io.File;
 
 import io.realm.Realm;
+import io.realm.RealmCollection;
+import io.realm.RealmConfiguration;
 
 public class DownloadHelper {
     public static Realm realm;
+
+    public DownloadHelper() {
+        RealmConfiguration realmConfig = new RealmConfiguration.Builder()
+                .allowWritesOnUiThread(true)
+                .build();
+        realm = Realm.getInstance(realmConfig);
+    }
 
     public static void startDownloadFIle(Context context, String url) {
         String urlFile = url;

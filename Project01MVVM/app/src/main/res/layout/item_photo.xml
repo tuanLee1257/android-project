@@ -24,7 +24,8 @@
             android:checkable="true"
             android:clickable="true"
             android:focusable="true"
-            android:onClick="@{()->HomeViewModel.onClick()}">
+            android:onClick="@{()->HomeViewModel.startPhotoDetailScreen(photo)}"
+            android:onLongClick="@{()->HomeViewModel.selectPhoto(photo)}">
 
             <ImageView
                 android:id="@+id/photo"

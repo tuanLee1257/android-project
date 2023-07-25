@@ -3,14 +3,18 @@ package com.example.project01mvvm.mvvm.homeScreen;
 import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
+import android.view.View;
 
 import androidx.databinding.ObservableArrayList;
 import androidx.databinding.ObservableBoolean;
 import androidx.databinding.ObservableField;
+import androidx.databinding.ObservableInt;
 
 import com.example.project01mvvm.models.Photo;
 import com.example.project01mvvm.models.Topic;
 import com.example.project01mvvm.services.ApiService;
+import com.example.project01mvvm.util.DownloadHelper;
+import com.google.android.material.card.MaterialCardView;
 
 import java.util.List;
 
@@ -23,14 +27,16 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 public class HomeScreenViewModel {
     private Disposable mDisposable;
     private ObservableArrayList<Photo> listPhoto = new ObservableArrayList<>();
+    private ObservableArrayList<Photo> selectedPhoto = new ObservableArrayList<>();
     private ObservableArrayList<Topic> listTopic = new ObservableArrayList<>();
     private ObservableBoolean isSuccess = new ObservableBoolean();
     private ObservableField<String> selectedTopicId = new ObservableField<>();
-    private String TAG = "TAG";
+    private ObservableInt page = new ObservableInt(1);
     private HomeScreenAction homeScreenAction;
+    private String TAG = "TAG";
 
     public void loadListPhoto() {
-        ApiService.apiService.listPhoto().subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<List<Photo>>() {
+        ApiService.apiService.listPhoto(page.get()).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<List<Photo>>() {
             @Override
             public void onSubscribe(@NonNull Disposable d) {
                 mDisposable = d;
@@ -57,8 +63,7 @@ public class HomeScreenViewModel {
 
     public void loadListPhotoWithTopic() {
         if (selectedTopicId.get() != null) {
-
-            ApiService.apiService.listPhotoUponTopic(selectedTopicId.get()).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<List<Photo>>() {
+            ApiService.apiService.listPhotoUponTopic(selectedTopicId.get(), page.get()).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<List<Photo>>() {
                 @Override
                 public void onSubscribe(@NonNull Disposable d) {
                     mDisposable = d;
@@ -66,7 +71,6 @@ public class HomeScreenViewModel {
 
                 @Override
                 public void onNext(@NonNull List<Photo> photos) {
-                    listPhoto.clear();
                     listPhoto.addAll(photos);
                 }
 
@@ -114,17 +118,38 @@ public class HomeScreenViewModel {
 
     public void changeSelectedTopic(String topicId) {
         selectedTopicId.set(topicId);
+        listPhoto.clear();
         loadListPhotoWithTopic();
     }
 
-    public void startPhotoDetailScreen(Photo photo){
+    public void loadMorePhotos() {
+        int next_page = page.get() + 1;
+        page.set(next_page);
+        if (selectedTopicId.get() == null | selectedTopicId.get() == "")
+            loadListPhoto();
+        else loadListPhotoWithTopic();
+    }
+
+    public void startPhotoDetailScreen(Photo photo) {
         if (homeScreenAction != null) {
             homeScreenAction.openPhoto(photo);
         }
     }
 
-    public void onClick() {
-        Log.e(TAG, "onClick: ");
+    public boolean selectPhoto(Photo photo) {
+        if (homeScreenAction != null) {
+            int position = listPhoto.indexOf(photo);
+            if (selectedPhoto.contains(photo)) {
+                selectedPhoto.remove(photo);
+            } else selectedPhoto.add(photo);
+            photo.setChecked(!photo.isChecked());
+            homeScreenAction.selectPhoto(position);
+        }
+        return true;
+    }
+
+    public void startDownload() {
+        homeScreenAction.downloadPhotos(selectedPhoto);
     }
 
     public Disposable getDisposable() {
@@ -173,5 +198,13 @@ public class HomeScreenViewModel {
 
     public void setHomeScreenAction(HomeScreenAction homeScreenAction) {
         this.homeScreenAction = homeScreenAction;
+    }
+
+    public ObservableArrayList<Photo> getSelectedPhoto() {
+        return selectedPhoto;
+    }
+
+    public void setSelectedPhoto(ObservableArrayList<Photo> selectedPhoto) {
+        this.selectedPhoto = selectedPhoto;
     }
 }

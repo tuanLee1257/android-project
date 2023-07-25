@@ -1,5 +1,6 @@
 package com.example.project01mvvm.adapters;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
@@ -9,6 +10,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.project01mvvm.R;
 import com.example.project01mvvm.databinding.ItemPhotoBinding;
+import com.example.project01mvvm.mvvm.homeScreen.HomeScreenAction;
 import com.example.project01mvvm.mvvm.homeScreen.HomeScreenViewModel;
 import com.example.project01mvvm.models.Photo;
 
@@ -17,6 +19,9 @@ import java.util.List;
 public class PhotoListAdapter extends RecyclerView.Adapter<PhotoListAdapter.ViewHolder> {
     private List<Photo> photos;
     private HomeScreenViewModel viewModel;
+    private HomeScreenAction homeScreenAction;
+
+
 
     public PhotoListAdapter(List<Photo> photos, HomeScreenViewModel viewModel) {
         this.photos = photos;
@@ -49,12 +54,18 @@ public class PhotoListAdapter extends RecyclerView.Adapter<PhotoListAdapter.View
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Photo photo = photos.get(position);
+        if (photos != null && position >= getItemCount()-1){
+            Log.e("TAG", "onBindViewHolder: end reach" );
+            viewModel.loadMorePhotos();
+        }
+        holder.itemPhotoBinding.photoCard.setChecked(photo.isChecked());
         holder.itemPhotoBinding.setPhoto(photo);
         holder.itemPhotoBinding.setHomeViewModel(viewModel);
         holder.itemPhotoBinding.executePendingBindings();
-
     }
-
+    public void setHomeScreenAction(HomeScreenAction homeScreenAction) {
+        this.homeScreenAction = homeScreenAction;
+    }
 
     @Override
     public int getItemCount() {

@@ -1,5 +1,7 @@
 package com.example.project01mvvm.services;
 
+import android.content.Intent;
+
 import com.example.project01mvvm.models.Photo;
 import com.example.project01mvvm.models.Topic;
 import com.google.gson.Gson;
@@ -19,6 +21,7 @@ import retrofit2.adapter.rxjava3.RxJava3CallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.http.GET;
 import retrofit2.http.Path;
+import retrofit2.http.Query;
 
 public interface ApiService {
     static String BASE_URL = "https://api.unsplash.com/";
@@ -55,12 +58,15 @@ public interface ApiService {
 
 
     @GET("photos")
-    Observable<List<Photo>> listPhoto();
+    Observable<List<Photo>> listPhoto(@Query("page") Integer page);
+
+    @GET("photos")
+    Observable<List<Photo>> loadMorePhotos(@Query("page") Integer page);
 
     @GET("topics")
     Observable<List<Topic>> listTopics();
 
     @GET("topics/{topic}/photos")
-    Observable<List<Photo>> listPhotoUponTopic(@Path("topic") String topic);
+    Observable<List<Photo>> listPhotoUponTopic(@Path("topic") String topic, @Query("page") Integer page);
 
 }
